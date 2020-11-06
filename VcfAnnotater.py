@@ -28,13 +28,3 @@ with open(output, 'w') as out_file:
     for item in matching_lines:
         out_file.write("%s\n" % item)
 
-file4 = ""
-file3 = "/Users/iwanhidding/Documents/ClinPred.txt"
-with open(file3, 'r') as f1, open(output, 'r') as f2:
-    d1 = {tuple(i.split()[:2] + i.split()[3:5]): i.split()[5:] for i in f1.read().split('\n')}
-    for i in f2.read().split('\n'):
-
-        tmp = i.split('\t')
-        if tuple(tmp[7:9] + tmp[2:4]) in d1:
-            matching_lines.append("\t".join(tmp[7:9] + tmp[2:4] + d1[tuple(tmp[7:9] + tmp[2:4])]
-                                  + tmp[:2] + tmp[4:7] + tmp[9:]))
