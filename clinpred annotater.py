@@ -1,16 +1,19 @@
 import argparse
 parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('inputfile', metavar='i',
+parser.add_argument('inputfile', type=str,
                     help='The input file for annotation')
+parser.add_argument('vestfile', type=str,
+                    help='The vest file for annotation')
 args = parser.parse_args()
 file1 = args.inputfile
 output = "full_file_annotated.vcf"
 matching_lines = []
 clin_list = []
 vest_list = []
+non_coding = []
 clinpred_file = "/Users/iwanhidding/Internship_Helsinki_2020_2021/installed_tools/chr_clinpred.txt"
-vest_file = "/Users/iwanhidding/Documents/i_j_hidding_20201104_025318/Variant_Additional_Details.Result.tsv"
-
+# vest_file = "/Users/iwanhidding/Documents/i_j_hidding_20201104_025318/Variant_Additional_Details.Result.tsv"
+vest_file = args.vestfile
 
 with open(file1, 'r') as bayes, open(clinpred_file, 'r') as clin, open(vest_file, 'r') as vest:
     clin_d = {}
@@ -27,23 +30,26 @@ with open(file1, 'r') as bayes, open(clinpred_file, 'r') as clin, open(vest_file
         #count += 1
         #if count == 15:
         #    exit()
-        if len(i.split('\t')) == 40:
+        #print(len(i.split('\t')))
+        if len(i.split('\t')) >= 40:
+            #print()
             #print('check')
             #print(tuple(i.split('\t')[2:4] + i.split('\t')[5:7]))
-            if i.split('\t')[33] != "":
-                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[33]})
-            elif i.split('\t')[34] != "":
-                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[34]})
-            elif i.split('\t')[35] != "":
-                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[35]})
-            elif i.split('\t')[36] != "":
-                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[36]})
-            elif i.split('\t')[37] != "":
-                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[37]})
-            elif i.split('\t')[38] != "":
-                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[38]})
-            else:
-                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): "."})
+            if i.split('\t')[-2] != "":
+                #print(tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[33])
+                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[-2]})
+            elif i.split('\t')[-3] != "":
+                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[-3]})
+            elif i.split('\t')[-4] != "":
+                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[-4]})
+            elif i.split('\t')[-5] != "":
+                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[-5]})
+            elif i.split('\t')[-6] != "":
+                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[-6]})
+            elif i.split('\t')[-7] != "":
+                vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[-7]})
+            #else:
+            #    vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): "."})
     print('vestcheck')
     #nonc_vest_d = {}
     #for i in nonc_vest.read().split('\n'):
@@ -84,21 +90,25 @@ with open(file1, 'r') as bayes, open(clinpred_file, 'r') as clin, open(vest_file
         #    singlecount += 1
         #elif tuple(bayes_line[:2]) in nc_dict:
         #    nc_lines.append("\t".join(bayes_line + nc_dict[tuple(bayes_line[:2])]))
-        #else:
-            #matching_lines.append("\t".join(bayes_line + ['.'] + ['.']))
+        else:
+            non_coding.append("\t".join(bayes_line))
 print('singlecount clin: ', singlecount_clin)
 print('singlecount vest: ', singlecount_vest)
 print('doublecount: ', doublecount)
 
 print("matching lines finished, starting the writing process.")
-with open('fullmatchingfile.txt', 'w') as out_file:
+with open('output_annotation/full.prediction', 'w') as out_file:
     for item in matching_lines:
         out_file.write("%s\n" % item)
 
-with open('Vestmatchingfile.txt', 'w') as out_file:
+with open('output_annotation/vest.prediction', 'w') as out_file:
     for item in vest_list:
         out_file.write("%s\n" % item)
 
-with open('clinmatchingfile.txt', 'w') as out_file:
+with open('output_annotation/clinpred.prediction', 'w') as out_file:
     for item in clin_list:
+        out_file.write("%s\n" % item)
+
+with open('output_annotation/non_coding.txt', 'w') as out_file:
+    for item in non_coding:
         out_file.write("%s\n" % item)

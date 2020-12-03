@@ -1,17 +1,41 @@
 import requests
-inputfile = "/Users/iwanhidding/Internship_Helsinki_2020_2021/installed_tools/test_vcf.vcf"
+import time
+import argparse
+import zipfile
+import io
+import json
+#himport StringIO
 
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('job_id',
+                    help='The job id from the cravat put.')
+parser.add_argument('output_directory',
+                    help='The output directory for the content of the zipfile')
+args = parser.parse_args()
+#inputfile = args.inputfile
 
-r = requests.post('http://www.cravat.us/CRAVAT/rest/service/submit',
-                  files={'inputfile': open(inputfile)},
-                  data={'email': 'i.j.hidding@st.hanze.nl', 'analyses': 'CHASM'})
-r.text # contains the submission result as a string. Check "status" field.
-
-#r = requests.get('http://www.cravat.us/CRAVAT/rest/service/submit',
-#                 params={'email': 'test@test.com', 'analyses': '',
-#                 'mutations': 'TR1 chr22 30025797 + A T sample_1'})
-#r.text # contains the submission result as a string. Check "status" field.
-
+time.sleep(360)
+#inputfile = "/Users/iwanhidding/Internship_Helsinki_2020_2021/installed_tools/test_vcf.vcf"
+#print(r.text) # contains the job status as a string.
 r = requests.get('http://www.cravat.us/CRAVAT/rest/service/status',
-                 params={'jobid':'test_20170315_103245'})
-r.text # contains the job status as a string.
+                     params={'jobid': args.job_id})
+status = json.loads(r.text)['status']
+while status == "Running":
+    r = requests.get('http://www.cravat.us/CRAVAT/rest/service/status',
+                     params={'jobid': args.job_id})
+    status = json.loads(r.text)['status']
+    time.sleep(360)
+    #status = r.text['status']
+
+#if status == "Succes":
+zip_file_url = json.loads(r.text)["resultfileurl"]
+#r = requests.get(url, allow_redirects=True)
+#download
+r_file = requests.get(zip_file_url)
+z = zipfile.ZipFile(io.BytesIO(r_file.content))
+z.extractall(args.output_directory)
+
+#3else:
+# #   print("Something went wrong during vest annotation")
+#    exit()
+

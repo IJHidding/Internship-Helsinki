@@ -1,18 +1,32 @@
 import pandas as pd
-import sklearn
+from sklearn.preprocessing import StandardScaler
+# from sklearn.ensemble import RandomForestClassifier
+import numpy as np
+import pickle
+import argparse
+
+parser = argparse.ArgumentParser(description='inputstuff')
+parser.add_argument('inputfile',
+                    help='The input file for annotation')
+parser.add_argument('analysis_type',
+                    help='Type of analysis to run')
+parser.add_argument('outputfile',
+                    help='Where to save the output')
+args = parser.parse_args()
+
 
 def columnranker(df, column, columnname):
     df[column] = df[column].astype('float')
     df = df.sort_values(column)
     ranked_list = []
     dataframelength = len(df)
-    print(dataframelength)
+    #print(dataframelength)
+    # prob change this to like range from start to end, this is some slow stuff
     current_row = 0
     for index, row in df.iterrows():
         current_row += 1
         #print(row['c1'], row['c2'])
         ranked_list.append(current_row/dataframelength)
-        # print(current_row/dataframelength)
     df[columnname] = ranked_list
     return df
 
@@ -32,20 +46,48 @@ def infoadapter(df, infocolumn):
     df['BayesDel_noAF_score'] = bayes_list
     return df
 
+def normalize(X):
+    scaler = StandardScaler()
+    scaler = scaler.fit(X)
+    X = scaler.transform(X)
+    return X
+
 
 def predictions(model, dataframe, columns):
     # load model,
-
+    loaded_model = pickle.load(open(model, 'rb'))
     # specify dataframe columns
-
-    #model.predict(data)
-
-    # rejoin predict column with other columns
-
+    #print(dataframe[columns])
+    dataframe['Prediction'] = loaded_model.predict(normalize(np.array(dataframe[columns])))
     return dataframe
 
+full_annotation_clf = "models/full_annotation_model.sav"
+vest_clf = "models/vest_model.sav"
+clinpred_clf = "models/clinpred_model.sav"
+non_coding_clf = "models/non_coding_model.sav"
+info_columns_full_annotation = ['ClinPred_score', 'VEST4_rankscore', 'BayesDel_noAF_rankscore', 'BayesDel_noAF_score']
+info_columns_full_vest = ['VEST4_rankscore', 'BayesDel_noAF_rankscore', 'BayesDel_noAF_score']
+info_columns_full_clinpred = ['ClinPred_score', 'BayesDel_noAF_rankscore', 'BayesDel_noAF_score']
+info_columns_full_non_coding = ['NC_SCORE', 'BayesDel_noAF_rankscore', 'BayesDel_noAF_score']
 
-test_set_update = infoadapter(test_set, 'INFO')
-test_set_update_2 = columnranker(test_set_update, '..1', 'VEST4_rankscore')
-outputdf = columnranker(test_set_update_2, 'BayesDel_noAF_score', 'BayesDel_noAF_rankscore')
-outputdf = outputdf.rename(columns={".": "ClinPred_score"})
+df = pd.read_csv(args.inputfile, delim_whitespace=True, header=0)
+print(df)
+df = df.dropna()
+df = infoadapter(df, 'INFO')
+df = columnranker(df, 'BayesDel_noAF_score', 'BayesDel_noAF_rankscore')
+if args.analysis_type == "full":
+    df = columnranker(df, 'VEST4', 'VEST4_rankscore')
+    #df = df.rename(columns={".": "ClinPred_score"})
+    output = predictions(full_annotation_clf, df, info_columns_full_annotation)
+elif args.analysis_type == "vest":
+    df = columnranker(df, 'VEST4', 'VEST4_rankscore')
+    output = predictions(vest_clf, df, info_columns_full_vest)
+elif args.analysis_type == "clinpred":
+    #f = df.rename(columns={".": "ClinPred_score"})
+    output = predictions(clinpred_clf, df, info_columns_full_clinpred)
+elif args.analysis_type == "non_coding":
+    output = predictions(non_coding_clf, df, info_columns_full_non_coding)
+
+output.to_csv(args.outputfile, index=False, sep='\t')
+
+

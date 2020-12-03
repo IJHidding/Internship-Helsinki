@@ -3,6 +3,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 import regex as re
 import pickle
 
@@ -36,8 +38,8 @@ def encode_df(dataframe):
 import pandas as pd
 import numpy as np
 
-test_set = pd.read_csv('/Users/iwanhidding/PycharmProjects/Internship-Helsinki/full_file_annotated.vcf',
-                       skiprows=67, sep='\t', skipfooter=1)
+#test_set = pd.read_csv('/Users/iwanhidding/PycharmProjects/Internship-Helsinki/full_file_annotated.vcf',
+#                       skiprows=67, sep='\t', skipfooter=1)
 
 
 def normalize(X):
@@ -48,11 +50,22 @@ def normalize(X):
 
 
 def create_classifier(dataframe, classifier_model, target, info_columns):
+    #print(dataframe)
+    for column in info_columns:
+        #print(column)
+        #print(dataframe[column])
+        dataframe = dataframe[pd.to_numeric(dataframe[column], errors='coerce').notnull()]
+    #dataframe = dataframe[pd.to_numeric(dataframe[info_columns], errors='coerce').notnull()]
     y = np.array(dataframe[target])
+    #print(dataframe[info_columns])
     X = normalize(np.array(dataframe[info_columns]))
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.9, random_state=42)
     clf = classifier_model
     clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    confusion_matrix_score = confusion_matrix(y_test, y_pred)
+    #print(confusion_matrix_score)
+    print(classification_report(y_test, y_pred))
     return clf
 
 
@@ -73,18 +86,21 @@ def label_fix(col):
         return np.NaN
 
 
-target = 'clinvar_clnsig'
+target = 'clinvar_hgvs'
 info_columns_full_annotation = ['ClinPred_score', 'VEST4_rankscore', 'BayesDel_noAF_rankscore', 'BayesDel_noAF_score']
 info_columns_full_vest = ['VEST4_rankscore', 'BayesDel_noAF_rankscore', 'BayesDel_noAF_score']
 info_columns_full_clinpred = ['ClinPred_score', 'BayesDel_noAF_rankscore', 'BayesDel_noAF_score']
-info_columns_full_non_coding = ['noncoding', 'BayesDel_noAF_rankscore', 'BayesDel_noAF_score']
-df = pd.read_csv()
-df['clinvar_clnsig'] = df['clinvar_clnsig'].apply(label_fix)
-df = df[df['clinvar_clnsig'].notna()]
-full_annotation_clf = create_classifier(df, RandomForestClassifier(), target, info_columns)
-vest_clf = create_classifier(df, RandomForestClassifier(), target, info_columns)
-clinpred_clf = create_classifier(df, RandomForestClassifier(), target, info_columns)
-non_coding_clf = create_classifier(df, RandomForestClassifier(), target, info_columns)
+info_columns_full_non_coding = ['NC_SCORE', 'BayesDel_noAF_rankscore', 'BayesDel_noAF_score']
+df = pd.read_csv("/Users/iwanhidding/PycharmProjects/Internship-Helsinki/output_annotation/nc_realoutput.txt", sep='\t')
+#print(df)
+df['clinvar_hgvs'] = df['clinvar_hgvs'].apply(label_fix)
+#print(df['clinvar_hgvs'])
+df = df[df['clinvar_hgvs'].notna()]
+#print(df)
+full_annotation_clf = create_classifier(df, RandomForestClassifier(), target, info_columns_full_annotation)
+vest_clf = create_classifier(df, RandomForestClassifier(), target, info_columns_full_vest)
+clinpred_clf = create_classifier(df, RandomForestClassifier(), target, info_columns_full_clinpred)
+non_coding_clf = create_classifier(df, RandomForestClassifier(), target, info_columns_full_non_coding)
 pickle.dump(full_annotation_clf, open('models/full_annotation_model.sav', 'wb'))
 pickle.dump(vest_clf, open('models/vest_model.sav', 'wb'))
 pickle.dump(clinpred_clf, open('models/clinpred_model.sav', 'wb'))
