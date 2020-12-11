@@ -15,6 +15,11 @@ parser.add_argument('outputfile',
 args = parser.parse_args()
 
 
+# this is currently vulnerable to low sample numbers.
+vest4_range = []
+bayes_range = []
+
+
 def columnranker(df, column, columnname):
     df[column] = df[column].astype('float')
     df = df.sort_values(column)
@@ -22,16 +27,26 @@ def columnranker(df, column, columnname):
     dataframelength = len(df)
     #print(dataframelength)
     # prob change this to like range from start to end, this is some slow stuff
-    current_row = 0
-    for index, row in df.iterrows():
-        current_row += 1
-        #print(row['c1'], row['c2'])
-        ranked_list.append(current_row/dataframelength)
+    if columnname == "VEST4_rankscore":
+        for value in df[column]:
+            # straight waste of computing
+            if value < 1:
+                value *= 1000
+            ranked_list.append(value / 1000)
+    elif columnname == "BayesDel_noAF_rankscore" or columnname == "BayesDel_addAF_rankscore":
+        for value in df[column]:
+            ranked_list.append(value + 1.29334 / (0.75731+1.29334))
+
+    #current_row = 0
+    #for index, row in df.iterrows():
+    #    current_row += 1
+    #    #print(row['c1'], row['c2'])
+    #    ranked_list.append(current_row/dataframelength)
     df[columnname] = ranked_list
     return df
 
 
-def infoadapter(df, infocolumn):
+def infoadapter(df, infocolumn, searchterm, columnname):
     bayes_list = []
     for item in list(df[infocolumn]):
         # print(item)
@@ -39,12 +54,13 @@ def infoadapter(df, infocolumn):
             for value in item.split(';'):
                 # print(value)
                 # print(value.split('=')[0])
-                if value.split('=')[0] == 'BayesDel_nsfp33a_noAF':
+                if value.split('=')[0] == searchterm:
                     bayes_list.append(value.split('=')[1])
         else:
             bayes_list.append('.')
-    df['BayesDel_noAF_score'] = bayes_list
+    df[columnname] = bayes_list
     return df
+
 
 def normalize(X):
     scaler = StandardScaler()
@@ -61,6 +77,7 @@ def predictions(model, dataframe, columns):
     dataframe['Prediction'] = loaded_model.predict(normalize(np.array(dataframe[columns])))
     return dataframe
 
+
 full_annotation_clf = "models/full_annotation_model.sav"
 vest_clf = "models/vest_model.sav"
 clinpred_clf = "models/clinpred_model.sav"
@@ -71,10 +88,13 @@ info_columns_full_clinpred = ['ClinPred_score', 'BayesDel_noAF_rankscore', 'Baye
 info_columns_full_non_coding = ['NC_SCORE', 'BayesDel_noAF_rankscore', 'BayesDel_noAF_score']
 
 df = pd.read_csv(args.inputfile, delim_whitespace=True, header=0)
-print(df)
+#print(df)
 df = df.dropna()
-df = infoadapter(df, 'INFO')
+df = infoadapter(df, 'INFO', 'BayesDel_nsfp33a_noAF', 'BayesDel_noAF_score')
+#df = infoadapter(df, 'INFO', 'MaxAF', 'BayesDel_addAF_score')
 df = columnranker(df, 'BayesDel_noAF_score', 'BayesDel_noAF_rankscore')
+#df = columnranker(df, 'BayesDel_addAF_score', 'BayesDel_addAF_rankscore')
+
 if args.analysis_type == "full":
     df = columnranker(df, 'VEST4', 'VEST4_rankscore')
     #df = df.rename(columns={".": "ClinPred_score"})

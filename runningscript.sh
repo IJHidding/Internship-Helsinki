@@ -33,6 +33,7 @@ python3 /Users/iwanhidding/PycharmProjects/Internship-Helsinki/Cravat_get.py "$j
 
 # Unzip the victor output.
 gunzip VICTOR_annotation.ann.del.gz
+( grep  '^#' VICTOR_annotation.ann.del ; grep -v "^#" VICTOR_annotation.ann.del | LC_ALL=C sort -t $'\t' -k1,1 -k2,2n -k4,4 | awk -F '\t' 'BEGIN{ prev="";} {key=sprintf("%s\t%s\t%s",$1,$2,$4);if(key==prev) next;print;prev=key;}' )  > tmp && mv tmp VICTOR_annotation.ann.del
 
 awk '{if($0 !~ /^#/) print "chr"$0; else print $0}' VICTOR_annotation.ann.del > tmp && mv tmp VICTOR_annotation.ann.del
 
@@ -83,4 +84,5 @@ cat header.txt all_ann_variants.txt | sort -k1,1V -k2,2n > /Users/iwanhidding/Py
 
 # cleanup
 rm VICTOR_annotation*
-# rm slurm.annotate*
+rm slurm.annotate*
+rm /Users/iwanhidding/PycharmProjects/Internship-Helsinki/output_annotation/non_coding_chr_out.vcf
