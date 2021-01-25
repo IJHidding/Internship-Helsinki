@@ -6,6 +6,8 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import plot_roc_curve
+import matplotlib.pyplot as plt
 import regex as re
 import pickle
 import pandas as pd
@@ -51,7 +53,7 @@ def normalize(X):
     return X
 
 
-def create_classifier(dataframe, classifier_model, target, info_columns):
+def create_classifier(dataframe, classifier_model, target, info_columns, title):
     #print(dataframe)
     for column in info_columns:
         #print(column)
@@ -65,9 +67,12 @@ def create_classifier(dataframe, classifier_model, target, info_columns):
     clf = classifier_model
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
-    confusion_matrix_score = confusion_matrix(y_test, y_pred)
+    #confusion_matrix_score = confusion_matrix(y_test, y_pred)
     #print(confusion_matrix_score)
     print(classification_report(y_test, y_pred))
+    plot_roc_curve(clf, X_test, y_test)
+    plt.title(title)
+    plt.show()
     return clf
 
 
@@ -105,26 +110,31 @@ frame = pd.read_csv("/Users/iwanhidding/Internship_Helsinki_2020_2021/installed_
 #    df_list.append(item)
 #frame = pd.concat(df_list, axis=0, ignore_index=True)
 #print(df)
-print(frame)
+#print(frame)
 print("applying fix")
 #print(frame['clinvar_hgvs'])
-print(frame['clinvar_clnsig'])
+#print(frame['clinvar_clnsig'])
 frame['clinvar_clnsig'] = frame['clinvar_clnsig'].apply(label_fix)
 #print(df['clinvar_hgvs'])
 print("removing na's")
 #print(frame['clinvar_hgvs'])
 frame = frame[frame['clinvar_clnsig'].notna()]
-print(frame)
+#print(frame)
 #print(df)
 ncframe = pd.read_csv("/Users/iwanhidding/Internship_Helsinki_2020_2021/installed_tools/dbNSFP4.1a/nctrainingfile.txt", sep='\t', low_memory=False, header=0)
-print(ncframe)
+#print(ncframe)
 ncframe['clinvar_clnsig'] = ncframe['clinvar_clnsig'].apply(label_fix)
 ncframe = ncframe[ncframe['clinvar_clnsig'].notna()]
 #print(ncframe)
-full_annotation_clf = create_classifier(frame, RandomForestClassifier(), target, info_columns_full_annotation)
-vest_clf = create_classifier(frame, RandomForestClassifier(), target, info_columns_full_vest)
-clinpred_clf = create_classifier(frame, RandomForestClassifier(), target, info_columns_full_clinpred)
-non_coding_clf = create_classifier(ncframe, RandomForestClassifier(), target, info_columns_full_non_coding)
+print("full trainer")
+full_annotation_clf = create_classifier(frame, RandomForestClassifier(), target, info_columns_full_annotation, "Full Annotation")
+print("vest trainer")
+vest_clf = create_classifier(frame, RandomForestClassifier(), target, info_columns_full_vest, "Vest Annotation")
+print("clinpred trainer")
+clinpred_clf = create_classifier(frame, RandomForestClassifier(), target, info_columns_full_clinpred, "Clinpred Annotation")
+print("non-coding trainer")
+non_coding_clf = create_classifier(ncframe, RandomForestClassifier(), target, info_columns_full_non_coding, "Non-coding Annotation")
+
 pickle.dump(full_annotation_clf, open('models/full_annotation_model.sav', 'wb'))
 pickle.dump(vest_clf, open('models/vest_model.sav', 'wb'))
 pickle.dump(clinpred_clf, open('models/clinpred_model.sav', 'wb'))

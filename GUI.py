@@ -5,8 +5,8 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 import pandas as pd
-import csv
-from tables import createStandardTable as cst
+#import csv
+#from tables import createStandardTable as cst
 import os
 
 
@@ -25,7 +25,7 @@ def selectItem(a):
 
 def running_analysis():
     print("button clicked with", filename)
-    print("sh runningscript {}".format(filename[0]))
+    print("sh runningscript.sh {}".format(filename[0]))
     print("analyis status: ", haplotype_var.get())
     if haplotype_var.get() == 1:
         haplonumber = entry.get()
@@ -33,7 +33,7 @@ def running_analysis():
     # change to import maybe instead of different program
             print("python3 Haplotype_file_analysis.py '{}'".format(filename))
             os.system("python3 Haplotype_file_analysis.py '{}' {}".format(filename, haplonumber))
-    #os.system("sh runningscript {}".format(filename))
+    os.system("sh /Users/iwanhidding/PycharmProjects/Internship-Helsinki/runningscript.sh {}".format(filename[0]))
     #path.os(runstuff)
 
 
@@ -68,7 +68,8 @@ def Load_UploadAction(event=None):
 
 def update_table(rows):
     for index, row in rows.iterrows():
-        #print(i)
+        # Expand on this with other columns later
+        # add a scrollbar and a search option, coding vs non-coding
         trv.insert('', 'end', values=[row['#CHROM'], row['POS'], row['REF'], row['ALT']])
 
 #root = tk.Tk()
@@ -142,7 +143,5 @@ trv.bind('<ButtonRelease-1>', selectItem)
 window.mainloop()
 
 
-# add a tickmark or more for settings global setting if true then that for like family search
 # turn to grid over pack to allow better visualisation, add scrolling, maybe less detials
-# add support for mulitple files
 

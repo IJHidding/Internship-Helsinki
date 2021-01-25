@@ -15,7 +15,7 @@ for file in str(args.tupleoffiles).replace('(', '').replace(')', '').replace(' '
             #print(line)
             #line = line.split("\t")[:5]
             if tuple(line) in saved_lines:
-                print(" doubles")
+                #print(" doubles")
                 saved_lines[tuple(line)] += 1
             else:
                 saved_lines.update({tuple(line): 1})
