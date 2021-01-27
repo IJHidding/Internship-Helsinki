@@ -8,6 +8,8 @@ import pandas as pd
 #import csv
 #from tables import createStandardTable as cst
 import os
+from proteinplotter import plotprotein
+from tables import get_sequence
 
 
 def select_active_items():
@@ -15,6 +17,7 @@ def select_active_items():
     for item in curitem:
         selected_list.append(trv.item(item)['values'])
     print(selected_list)
+    get_sequence(selected_list)
 
 
 def selectItem(a):
@@ -22,6 +25,7 @@ def selectItem(a):
     curitem = trv.selection()
     for item in curitem:
         print(trv.item(item))
+
 
 def running_analysis():
     print("button clicked with", filename)
@@ -50,6 +54,7 @@ def UploadAction(event=None):
     #cst(filename, window).pack()
     print('Selected:', filename)
 
+
 def Load_UploadAction(event=None):
     #global filename
     analysis_file = filedialog.askopenfilename()
@@ -71,6 +76,13 @@ def update_table(rows):
         # Expand on this with other columns later
         # add a scrollbar and a search option, coding vs non-coding
         trv.insert('', 'end', values=[row['#CHROM'], row['POS'], row['REF'], row['ALT']])
+
+
+def load_image():
+    canvas = Canvas(root, width=300, height=300)
+    canvas.pack()
+    img = plotprotein()
+    canvas.create_image(20, 20, anchor=NW, image=img)
 
 #root = tk.Tk()
 
@@ -111,7 +123,7 @@ button_3 = tk.Button(wrapper2, text='Open', command=Load_UploadAction)
 button_selection = tk.Button(wrapper2, text='confirm selection', command=select_active_items)
 haplocheckmark = Checkbutton(wrapper1, text="Haplotype Analysis", variable=haplotype_var)
 
-trv = ttk.Treeview(wrapper2, columns=(1,2,3,4), show="headings", height="10")
+trv = ttk.Treeview(wrapper2, columns=(1, 2, 3, 4), show="headings", height="10")
 
 
 greeting.pack()
