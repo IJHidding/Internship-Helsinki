@@ -22,7 +22,7 @@ bgzip -c "${inputfile}" > inputfile.vcf.gz
 tabix -p vcf inputfile.vcf.gz
 
 # while vest is running annotate locally using victor
-#bash /Users/iwanhidding/Internship_Helsinki_2020_2021/installed_tools/VICTOR/slurm.annotate 1>slurm.annotate.run_1.stdout 2>slurm.annotate.run_1.stderr inputfile.vcf.gz
+bash /Users/iwanhidding/Internship_Helsinki_2020_2021/installed_tools/VICTOR/slurm.annotate 1>slurm.annotate.run_1.stdout 2>slurm.annotate.run_1.stderr inputfile.vcf.gz
 # add the unique thing to this.
 
 job_id=$(cat jobid.txt)
@@ -33,6 +33,8 @@ python3 /Users/iwanhidding/PycharmProjects/Internship-Helsinki/Cravat_get.py "$j
 
 # Unzip the victor output.
 gunzip /Users/iwanhidding/PycharmProjects/Internship-Helsinki/VICTOR_annotation.ann.del.gz
+
+# this line grabs only one variant as the VICTOR tool annotated the variant per isoform of the protein
 ( grep  '^#' /Users/iwanhidding/PycharmProjects/Internship-Helsinki/VICTOR_annotation.ann.del ; grep -v "^#" /Users/iwanhidding/PycharmProjects/Internship-Helsinki/VICTOR_annotation.ann.del | LC_ALL=C sort -t $'\t' -k1,1 -k2,2n -k4,4 | awk -F '\t' 'BEGIN{ prev="";} {key=sprintf("%s\t%s\t%s",$1,$2,$4);if(key==prev) next;print;prev=key;}' )  > tmp && mv tmp /Users/iwanhidding/PycharmProjects/Internship-Helsinki/VICTOR_annotation.ann.del
 
 awk '{if($0 !~ /^#/) print "chr"$0; else print $0}' /Users/iwanhidding/PycharmProjects/Internship-Helsinki/VICTOR_annotation.ann.del > tmp && mv tmp /Users/iwanhidding/PycharmProjects/Internship-Helsinki/VICTOR_annotation.ann.del

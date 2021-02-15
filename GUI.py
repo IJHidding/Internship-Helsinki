@@ -9,15 +9,55 @@ import pandas as pd
 #from tables import createStandardTable as cst
 import os
 from proteinplotter import plotprotein
-from tables import get_sequence
+from tables import get_sequence, one_of_each
+import tensorflow as tf
 
 
 def select_active_items():
+    global sequence_location
     selected_list = []
     for item in curitem:
         selected_list.append(trv.item(item)['values'])
     print(selected_list)
-    get_sequence(selected_list)
+    listofsequences = []
+    listof_variant_sequences =[]
+    for selection in selected_list:
+        print(selection[:2])
+        sequence_location, sequences, variant_sequence = get_sequence(selection[:2], selection[3], selection[2])
+        listofsequences.append(sequences)
+        listof_variant_sequences(variant_sequence)
+
+    print(listofsequences)
+
+    #get_sequence("\t".join(selected_list))
+
+
+def get_plot(sequence):
+    def get_model():
+        model = tf.keras.Sequential([
+            tf.keras.layers.InputLayer(input_shape=(3000,)),
+            tf.keras.layers.Dense(5000, activation='relu'),
+            tf.keras.layers.Dense(3000, activation='sigmoid')
+        ])
+        model.compile(loss='binary_crossentropy', optimizer='adam')
+        return model
+    if len(sequence) > 3000:
+        print("protein too big, cant analyse")
+    else:
+        model = get_model()
+        model.load_weights('./models/binding.sav')
+        other_binding = model.predict(one_of_each(sequence))
+        model = get_model()
+        model.load_weights('./models/dna_binding.sav')
+        dna_binding = model.predict(one_of_each(sequence))
+        model = get_model()
+        model.load_weights('./models/metal.sav')
+        metal_binding = model.predict(one_of_each(sequence))
+        model = get_model()
+        model.load_weights('./models/Act_sites.sav')
+        active = model.predict(one_of_each(sequence))
+        plot_image = plotprotein(sequence, other_binding, dna_binding, metal_binding, active, sequence_location)
+        return plot_image
 
 
 def selectItem(a):

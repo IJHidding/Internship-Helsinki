@@ -35,7 +35,7 @@ def columnranker(df, column, columnname):
             ranked_list.append(value / 1000)
     elif columnname == "BayesDel_noAF_rankscore" or columnname == "BayesDel_addAF_rankscore":
         for value in df[column]:
-            ranked_list.append(value + 1.29334 / (0.75731+1.29334))
+            ranked_list.append((value + 1.29334) / (0.75731+1.29334))
 
     #current_row = 0
     #for index, row in df.iterrows():

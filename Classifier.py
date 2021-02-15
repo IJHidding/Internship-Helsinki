@@ -121,7 +121,7 @@ print("removing na's")
 frame = frame[frame['clinvar_clnsig'].notna()]
 #print(frame)
 #print(df)
-ncframe = pd.read_csv("/Users/iwanhidding/Internship_Helsinki_2020_2021/installed_tools/dbNSFP4.1a/nctrainingfile.txt", sep='\t', low_memory=False, header=0)
+ncframe = pd.read_csv("/Users/iwanhidding/Internship_Helsinki_2020_2021/installed_tools/non_codingtraining2.csv", sep='\t', low_memory=False, header=0)
 #print(ncframe)
 ncframe['clinvar_clnsig'] = ncframe['clinvar_clnsig'].apply(label_fix)
 ncframe = ncframe[ncframe['clinvar_clnsig'].notna()]
