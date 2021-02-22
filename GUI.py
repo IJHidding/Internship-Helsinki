@@ -5,8 +5,6 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 import pandas as pd
-#import csv
-#from tables import createStandardTable as cst
 import os
 from proteinplotter import plotprotein
 from tables import get_sequence, one_of_each
@@ -96,18 +94,14 @@ def UploadAction(event=None):
 
 
 def Load_UploadAction(event=None):
-    #global filename
     analysis_file = filedialog.askopenfilename()
-    #filelabelname.set('Selected file: {}'.format(filename))
-    #file_label.configure(text='Selected file: {}'.format(filename))
-    print('checkers')
     print(analysis_file)
     df = pd.read_csv(analysis_file, sep='\t', header=0)
     # global rows
     rows = df[['#CHROM', 'POS', 'REF', 'ALT']]
     print(rows)
     update_table(rows)
-    #cst(open(analysis_file), window).pack()
+    # cst(open(analysis_file), window).pack()
     print('Selected:', analysis_file)
 
 
@@ -119,12 +113,12 @@ def update_table(rows):
 
 
 def load_image():
-    canvas = Canvas(root, width=300, height=300)
-    canvas.pack()
-    img = plotprotein()
-    canvas.create_image(20, 20, anchor=NW, image=img)
+    #canvas = Canvas(root, width=300, height=300)
+    #canvas.pack()
+    #img = plotprotein()
+    #canvas.create_image(20, 20, anchor=NW, image=img)
+    pass
 
-#root = tk.Tk()
 
 window = tk.Tk()
 window.title("Iwan's analysis pipeline")
@@ -143,14 +137,9 @@ greeting = tk.Label(wrapper1, text="Put your vcf down here:")
 global haplotype_var
 haplotype_var = IntVar()
 
-#filelabelname = tk.StringVar()
-#filelabelname.set("No file selected")
-#print(filelabelname)
 entry = tk.Entry(wrapper1)
 file_label = tk.Label(wrapper1, text="No file selected")
 haplolabel = tk.Label(wrapper1, text="Enter the required number of matching variants for haplotype analysis:")
-#print('this isnt it')
-
 
 button = tk.Button(
     wrapper1,

@@ -7,7 +7,7 @@ parser.add_argument('haplonumber',
                     help='The number of matching variants to count for the analysis')
 args = parser.parse_args()
 saved_lines = {}
-#print(str(args.tupleoffiles).replace('(', '').replace(')', '').replace(' ', '').split(','))
+
 for file in str(args.tupleoffiles).replace('(', '').replace(')', '').replace(' ', '').split(','):
     print(file)
     with open(file) as f:

@@ -1,5 +1,9 @@
 #!/bin/zsh
-# VATS variant analysis tool system
+# This is the pipeline for variant analysis as part of the VPTS program.
+# This program will run from the GUI on mac OSX and linux. For use of this program on windows, this script has to be
+# run from the command line on a unix server. The output file can then be used on mac OSX, linux or windows from the GUI
+# to analyse protein structure.
+
 inputfile=$1
 echo "${inputfile}"
 working_loc="/Users/iwanhidding/PycharmProjects/Internship-Helsinki/"
