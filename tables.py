@@ -1,6 +1,10 @@
 import os
 import numpy as np
 # add the variant coordinate.
+from proteinplotter import plotprotein
+import tensorflow as tf
+from tensorflow import keras
+#from sklearn.models
 
 
 def get_sequence(coords, variant, ref):
@@ -123,12 +127,20 @@ def one_of_each(seq_list, size=3000):
                       "I": "9", "J": "10", "K": "11", "L": "12", "M": "13", "N": "14", "O": "15", "P": "16",
                       "Q": "17", "R": "18", "S": "19", "T": "20", "U": "21", "V": "22", "W": "23", "X": "24",
                       "Y": "25", "Z": "26"}
+    #new_acid_list = np.zeros(size)
+    #for acid in enumerate(seq_list):
+    #    new_acid_list[acid[0]] = (int(acid_code_dict[acid[1]]) / 25)  # normalize the data?
+    #print(np.asarray(new_acid_list))
+    #return np.asarray(new_acid_list)
+
     new_seq_list = []
+    #print(seq_list)
     for seq in seq_list:
         new_acid_list = np.zeros(size)
         for acid in enumerate(seq):
             new_acid_list[acid[0]] = (int(acid_code_dict[acid[1]]) / 25)  # normalize the data?
         new_seq_list.append(new_acid_list)
+    #print(np.asarray(new_seq_list))
     return np.asarray(new_seq_list)
 
 
@@ -186,4 +198,59 @@ def find_variant_location(geneid, location):
     return sequence_loc_list, genelengthlist
 
 
-print(get_sequence(['chr1', '874421', '874422'], 'A', 'G'))
+def get_model():
+    model = tf.keras.Sequential([
+    tf.keras.layers.InputLayer(input_shape=(3000,)),
+    tf.keras.layers.Dense(5000, activation='relu'),
+    tf.keras.layers.Dense(3000, activation='sigmoid')
+    ])
+    model.compile(loss='binary_crossentropy', optimizer='adam')
+    return model
+
+# print(get_sequence(['chr1', '874421', '874422'], 'A', 'G'))
+# sequences =
+
+
+variant_location_list, sequence_list, variant_sequence_list = get_sequence(['chr1', '874421', '874422'], 'A', 'G')
+normal_sequence_numeric = one_of_each(sequence_list)
+variant_sequence_numeric = one_of_each(variant_sequence_list)
+print(one_of_each(sequence_list))
+print(variant_location_list)
+print(variant_sequence_list)
+
+model = get_model()
+model.load_weights('./models/binding.sav')
+other_binding = model.predict(one_of_each(normal_sequence_numeric)).round()
+model = get_model()
+model.load_weights('./models/dna_binding.sav')
+dna_binding = model.predict(one_of_each(normal_sequence_numeric)).round()
+model = get_model()
+model.load_weights('./models/metal.sav')
+metal_binding = model.predict(one_of_each(normal_sequence_numeric)).round()
+model = get_model()
+model.load_weights('./models/Act_sites.sav')
+active = model.predict(one_of_each(normal_sequence_numeric)).round()
+
+model = get_model()
+model.load_weights('./models/binding.sav')
+variant_other_binding = model.predict(one_of_each(variant_sequence_numeric)).round()
+model = get_model()
+model.load_weights('./models/dna_binding.sav')
+variant_dna_binding = model.predict(one_of_each(variant_sequence_numeric)).round()
+model = get_model()
+model.load_weights('./models/metal.sav')
+variant_metal_binding = model.predict(one_of_each(variant_sequence_numeric)).round()
+model = get_model()
+model.load_weights('./models/Act_sites.sav')
+variant_active = model.predict(one_of_each(variant_sequence_numeric)).round()
+#for i in range(0, len(variant_location_list)):
+
+
+#for variant_location, sequence, variant_sequence in zip(variant_location_list, sequence_list, variant_sequence_list):
+#    print(variant_location)
+#    print(sequence)
+#    print(variant_sequence)
+#    model = get_model()
+
+
+#    plotprotein(sequence, other_binding, dna_binding, metal_binding, active, variant_location)
