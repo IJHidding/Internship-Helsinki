@@ -1,9 +1,15 @@
 import argparse
+import pandas as pd
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('inputfile', type=str,
                     help='The input file for annotation')
 parser.add_argument('vestfile', type=str,
                     help='The vest file for annotation')
+parser.add_argument('clinpred_file', type=str,
+                    help='the file containing clinpred details')
+parser.add_argument('size', type=str,
+                    help='deterimine is there is one or more output files')
+
 args = parser.parse_args()
 file1 = args.inputfile
 output = "full_file_annotated.vcf"
@@ -11,9 +17,14 @@ matching_lines = []
 clin_list = []
 vest_list = []
 non_coding = []
-clinpred_file = "/Users/iwanhidding/Internship_Helsinki_2020_2021/installed_tools/chr_clinpred.txt"
-# vest_file = "/Users/iwanhidding/Documents/i_j_hidding_20201104_025318/Variant_Additional_Details.Result.tsv"
+clinpred_file = args.clinpred_file
 vest_file = args.vestfile
+if args.size == "small":
+    excel_file = vest_file
+    sheet = "Variant Additional Details"
+    df = pd.read_excel(excel_file, sheet_name=sheet)
+    df.to_csv("tsvfile.tsv", sep='\t', index=False, header=False)
+    vest_file = "tsvfile.tsv"
 
 with open(file1, 'r') as bayes, open(clinpred_file, 'r') as clin, open(vest_file, 'r') as vest:
     clin_d = {}
@@ -25,16 +36,8 @@ with open(file1, 'r') as bayes, open(clinpred_file, 'r') as clin, open(vest_file
     #count = 0
     for i in vest.read().split('\n'):
 
-        #print(i.split('\t'))
-        #print()
-        #count += 1
-        #if count == 15:
-        #    exit()
-        #print(len(i.split('\t')))
         if len(i.split('\t')) >= 40:
-            #print()
-            #print('check')
-            #print(tuple(i.split('\t')[2:4] + i.split('\t')[5:7]))
+
             if i.split('\t')[-2] != "":
                 #print(tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[33])
                 vest_d.update({tuple(i.split('\t')[2:4] + i.split('\t')[5:7]): i.split('\t')[-2]})

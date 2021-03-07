@@ -1,16 +1,19 @@
 import pandas as pd
 import numpy as np
 from bokeh.io import curdoc, show, reset_output
-from bokeh.models import ColumnDataSource, Grid, Line, LinearAxis, Plot, LabelSet, LinearColorMapper, Range1d
+from bokeh.models import ColumnDataSource, Grid, Line, LinearAxis, Plot, LabelSet, LinearColorMapper, Range1d, Span
 #from bokeh.io.export import get_screen
 from bokeh.plotting import figure
 from bokeh.layouts import column
 
 
 def plotprotein(sequence, other_binding, dna_binding, metal_binding, active, variant_location):
-    sequence = [i for i in sequence[0]]
+    sequence = [i for i in sequence]
+    print(len(sequence))
     sequence += [''] * (3000 - len(sequence))
     print(sequence)
+
+    print(variant_location)
     if variant_location > 50:
         start_seq = variant_location - 50
     else:
@@ -40,6 +43,7 @@ def plotprotein(sequence, other_binding, dna_binding, metal_binding, active, var
     plot.add_glyph(source2, glyph2)
     plot.add_glyph(source3, glyph3)
     plot.add_glyph(source4, glyph4)
+    plot.add_layout(Span(location=variant_location, dimension='height', line_color='black'))
     xaxis = LinearAxis()
         #YOUR_FONT_SIZE = 10
     labels = LabelSet(x='x', y=1, text='names', level='glyph',

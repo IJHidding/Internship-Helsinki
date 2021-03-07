@@ -4,8 +4,19 @@
 # run from the command line on a unix server. The output file can then be used on mac OSX, linux or windows from the GUI
 # to analyse protein structure.
 
+# to ensure running update the pathtovictor and pathtoncER to the current locations of these files.
+
+# todo list, group victor tools together and move database to /databases maybe set email to changable add /VICTOR
+
 inputfile=$1
 echo "${inputfile}"
+
+# get the length of the file and only the number
+length_file=$(wc -l < "${inputfile}" | sed 's/ //g')
+echo "${length_file}"
+pathtovictor="Path/to/victor"
+pathtoncER="Path/to/ncER"
+pathtoClinpred="Path/to/Clinpred"
 
 # save header
 grep "^#" "${inputfile}" > header.txt
@@ -25,8 +36,7 @@ bgzip -c "${inputfile}" > inputfile.vcf.gz
 tabix -p vcf inputfile.vcf.gz
 
 # while vest is running annotate locally using victor
-# $pathtovictor
-bash /Users/iwanhidding/Internship_Helsinki_2020_2021/installed_tools/VICTOR/slurm.annotate 1>slurm.annotate.run_1.stdout 2>slurm.annotate.run_1.stderr inputfile.vcf.gz
+bash ${pathtovictor}/VICTOR/slurm.annotate 1>slurm.annotate.run_1.stdout 2>slurm.annotate.run_1.stderr inputfile.vcf.gz
 # add the unique thing to this.
 
 job_id=$(cat jobid.txt)
@@ -44,13 +54,20 @@ gunzip VICTOR_annotation.ann.del.gz
 awk '{if($0 !~ /^#/) print "chr"$0; else print $0}' VICTOR_annotation.ann.del > tmp && mv tmp VICTOR_annotation.ann.del
 
 # Combine all coding annotations into different files depending on which are available # fix the other excel option
-python3 clinpred\ annotater.py VICTOR_annotation.ann.del output_annotation/"${job_id}"/Variant_Additional_Details.Result.tsv
+minsize=100000
 
+if [ "${length_file}" -ge "${minsize}" ]; then
+  echo "big"
+  python3 clinpred\ annotater.py VICTOR_annotation.ann.del output_annotation/"${job_id}"/Variant_Additional_Details.Result.tsv ${pathtoClinpred}/chr_clinpred.txt big
+else
+  python3 clinpred\ annotater.py VICTOR_annotation.ann.del output_annotation/"${job_id}"/*.xls ${pathtoClinpred}/chr_clinpred.txt small
+  echo "smol"
+fi
 # Non coding annotation
 for current_iteration in "${chr_chromosome_list[@]}"
 do
   echo "${current_iteration}"
-  bedtools intersect -a output_annotation/non_coding.txt -b /Users/iwanhidding/Internship_Helsinki_2020_2021/installed_tools/ncER/ncER_perc_"${current_iteration}"_coordSorted.txt -wb >> output_annotation/non_coding_chr_out.vcf
+  bedtools intersect -a output_annotation/non_coding.txt -b ${pathtoncER}/ncER/ncER_perc_"${current_iteration}"_coordSorted.txt -wb >> output_annotation/non_coding_chr_out.vcf
 done
 
 # add the column names from the other stuff still to this
@@ -95,4 +112,5 @@ rm output_annotation/*.prediction
 rm output_annotation/headerline.txt
 rm inputfile.vcf.gz
 rm header.txt
-rm job_id.txt
+rm jobid.txt
+rm tsvfile.tsv

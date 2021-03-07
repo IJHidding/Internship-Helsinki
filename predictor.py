@@ -73,9 +73,7 @@ def predictions(model, dataframe, columns):
     # load model,
     loaded_model = pickle.load(open(model, 'rb'))
     # specify dataframe columns
-    #print(dataframe[columns])
-    dataframe['Prediction'] = loaded_model.predict_proba(normalize(np.array(dataframe[columns])))
-    print(dataframe['Prediction'])
+    dataframe['Prediction'] = loaded_model.predict_proba(normalize(np.array(dataframe[columns])))[:,1]
     return dataframe
 
 

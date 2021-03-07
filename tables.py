@@ -4,7 +4,6 @@ import numpy as np
 from proteinplotter import plotprotein
 import tensorflow as tf
 from tensorflow import keras
-#from sklearn.models
 
 
 def get_sequence(coords, variant, ref):
@@ -69,7 +68,9 @@ def get_sequence(coords, variant, ref):
                     variant_sequence = sequence_string[:location] + variant + sequence_string[location + 1:]
                     # print(variant_sequence)
                     variant_sequence_database.append(variant_sequence)
-        break
+            break
+        else:
+            return [], [], []
     sequence_output = [convert_to_protein(x) for x in sequence_database]
     variant_sequence_output = [convert_to_protein(x) for x in variant_sequence_database]
     variant_location_output = [x for x in variant_location_list if x]
@@ -127,20 +128,13 @@ def one_of_each(seq_list, size=3000):
                       "I": "9", "J": "10", "K": "11", "L": "12", "M": "13", "N": "14", "O": "15", "P": "16",
                       "Q": "17", "R": "18", "S": "19", "T": "20", "U": "21", "V": "22", "W": "23", "X": "24",
                       "Y": "25", "Z": "26"}
-    #new_acid_list = np.zeros(size)
-    #for acid in enumerate(seq_list):
-    #    new_acid_list[acid[0]] = (int(acid_code_dict[acid[1]]) / 25)  # normalize the data?
-    #print(np.asarray(new_acid_list))
-    #return np.asarray(new_acid_list)
 
     new_seq_list = []
-    #print(seq_list)
     for seq in seq_list:
         new_acid_list = np.zeros(size)
         for acid in enumerate(seq):
             new_acid_list[acid[0]] = (int(acid_code_dict[acid[1]]) / 25)  # normalize the data?
         new_seq_list.append(new_acid_list)
-    #print(np.asarray(new_seq_list))
     return np.asarray(new_seq_list)
 
 
@@ -220,37 +214,39 @@ print(variant_sequence_list)
 
 model = get_model()
 model.load_weights('./models/binding.sav')
-other_binding = model.predict(one_of_each(normal_sequence_numeric)).round()
+other_binding = model.predict(normal_sequence_numeric).round()
 model = get_model()
 model.load_weights('./models/dna_binding.sav')
-dna_binding = model.predict(one_of_each(normal_sequence_numeric)).round()
+dna_binding = model.predict(normal_sequence_numeric).round()
 model = get_model()
 model.load_weights('./models/metal.sav')
-metal_binding = model.predict(one_of_each(normal_sequence_numeric)).round()
+metal_binding = model.predict(normal_sequence_numeric).round()
 model = get_model()
 model.load_weights('./models/Act_sites.sav')
-active = model.predict(one_of_each(normal_sequence_numeric)).round()
+active = model.predict(normal_sequence_numeric).round()
 
 model = get_model()
 model.load_weights('./models/binding.sav')
-variant_other_binding = model.predict(one_of_each(variant_sequence_numeric)).round()
+variant_other_binding = model.predict(variant_sequence_numeric).round()
 model = get_model()
 model.load_weights('./models/dna_binding.sav')
-variant_dna_binding = model.predict(one_of_each(variant_sequence_numeric)).round()
+variant_dna_binding = model.predict(variant_sequence_numeric).round()
 model = get_model()
 model.load_weights('./models/metal.sav')
-variant_metal_binding = model.predict(one_of_each(variant_sequence_numeric)).round()
+variant_metal_binding = model.predict(variant_sequence_numeric).round()
 model = get_model()
 model.load_weights('./models/Act_sites.sav')
-variant_active = model.predict(one_of_each(variant_sequence_numeric)).round()
+variant_active = model.predict(variant_sequence_numeric).round()
 #for i in range(0, len(variant_location_list)):
 
+# todo store this output data properly
 
 #for variant_location, sequence, variant_sequence in zip(variant_location_list, sequence_list, variant_sequence_list):
 #    print(variant_location)
 #    print(sequence)
 #    print(variant_sequence)
 #    model = get_model()
-
-
-#    plotprotein(sequence, other_binding, dna_binding, metal_binding, active, variant_location)
+iteration = 0
+for sequence in sequence_list:
+    plotprotein(sequence, other_binding[iteration], dna_binding[iteration], metal_binding[iteration], active[iteration], variant_location_list[iteration])
+    iteration += 1
