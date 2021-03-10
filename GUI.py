@@ -11,21 +11,35 @@ from tables import get_sequence, one_of_each
 import tensorflow as tf
 
 
+def run_protein_analysis():
+    biglist_of_everything = []
+    for index, row in df.iterrows():
+        print(row['#CHROM'], row['POS'], row['ALT'], row['REF'])
+        variant_location_list, sequence_list, variant_sequence_list = get_sequence([row['#CHROM'], row['POS']], row['ALT'], row['REF'])
+        biglist_of_everything.append([variant_location_list, sequence_list, variant_sequence_list])
+    df['protein_analysis'] = biglist_of_everything
+    rows = df[['#CHROM', 'POS', 'REF', 'ALT', 'PREDICTIONSCORE', 'protein_analysis']]
+    print(rows)
+    update_table(rows, 2)
+
+
 def select_active_items():
     global sequence_location
+    #results_storage_dict = {}
     selected_list = []
     for item in curitem:
         selected_list.append(trv.item(item)['values'])
     print(selected_list)
-    listofsequences = []
-    listof_variant_sequences =[]
-    for selection in selected_list:
-        print(selection[:2])
-        sequence_location, sequences, variant_sequence = get_sequence(selection[:2], selection[3], selection[2])
-        listofsequences.append(sequences)
-        listof_variant_sequences(variant_sequence)
+    for item in selected_list:
+        print(item)
 
-    print(listofsequences)
+
+        # protein plotter here instead
+        #results_storage_dict[selection[:2]] = [variant_location_list, sequence_list, variant_sequence_list]
+        #listofsequences.append(sequences)
+        #listof_variant_sequences(variant_sequence)
+
+    #print(listofsequences)
 
     #get_sequence("\t".join(selected_list))
 
@@ -94,23 +108,27 @@ def UploadAction(event=None):
 
 
 def Load_UploadAction(event=None):
+    global df
     analysis_file = filedialog.askopenfilename()
     print(analysis_file)
-    df = pd.read_csv(analysis_file, sep='\t', header=0)
+    df = pd.read_csv(analysis_file, delim_whitespace=True, header=0)
     # global rows
-    rows = df[['#CHROM', 'POS', 'REF', 'ALT']]
+    # add score
+    rows = df[['#CHROM', 'POS', 'REF', 'ALT', 'PREDICTIONSCORE']]
     print(rows)
-    update_table(rows)
+    update_table(rows, 1)
     # cst(open(analysis_file), window).pack()
     print('Selected:', analysis_file)
 
 
-def update_table(rows):
+def update_table(rows, instance):
     for index, row in rows.iterrows():
         # Expand on this with other columns later
         # add a scrollbar and a search option, coding vs non-coding
-        trv.insert('', 'end', values=[row['#CHROM'], row['POS'], row['REF'], row['ALT']])
-
+        if instance == 1:
+            trv.insert('', 'end', values=[row['#CHROM'], row['POS'], row['REF'], row['ALT'], row['PREDICTIONSCORE']])
+        elif instance == 2:
+            trv.insert('', 'end', values=[row['#CHROM'], row['POS'], row['REF'], row['ALT'], row['PREDICTIONSCORE'], row['protein_analysis']])
 
 def load_image():
     #canvas = Canvas(root, width=300, height=300)
@@ -149,10 +167,11 @@ button = tk.Button(
 
 button_2 = tk.Button(wrapper1, text='Open', command=UploadAction)
 button_3 = tk.Button(wrapper2, text='Open', command=Load_UploadAction)
-button_selection = tk.Button(wrapper2, text='confirm selection', command=select_active_items)
+button_selection = tk.Button(wrapper2, text='plot selection', command=select_active_items)
+button_protein = tk.Button(wrapper2, text='Run protein analysis', command=run_protein_analysis)
 haplocheckmark = Checkbutton(wrapper1, text="Haplotype Analysis", variable=haplotype_var)
 
-trv = ttk.Treeview(wrapper2, columns=(1, 2, 3, 4), show="headings", height="10")
+trv = ttk.Treeview(wrapper2, columns=(1, 2, 3, 4, 5, 6), show="headings", height="10")
 
 
 greeting.pack()
@@ -164,11 +183,14 @@ entry.pack()
 button.pack()
 button_3.pack()
 trv.pack()
+button_protein.pack()
 button_selection.pack()
 trv.heading(1, text="chr")
 trv.heading(2, text="pos")
 trv.heading(3, text="ref")
 trv.heading(4, text="alt")
+trv.heading(5, text="Pathogenicity score")
+trv.heading(6, text="Protein analysis")
 trv.bind('<ButtonRelease-1>', selectItem)
 
 

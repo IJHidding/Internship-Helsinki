@@ -1,12 +1,23 @@
+"""
+This script contains the functions related to pulling the protein sequences from databases based on the input variants.
+
+"""
+
 import os
 import numpy as np
-# add the variant coordinate.
-from proteinplotter import plotprotein
 import tensorflow as tf
-from tensorflow import keras
+
 
 
 def get_sequence(coords, variant, ref):
+    """
+    This function gets all protein sequences from the database and also created a variant sequence.
+    :param coords: the coords of the variant
+    :param variant: the given variant base
+    :param ref: the reference base, not currently used but can be expanded to add a control to ensure the right base
+    is found
+    :return: returns a list of protein sequences, variant sequences and the location of the variant in each sequence.
+    """
     new_cords = [coords[0], str(coords[1]), str(int(coords[1]) + 1)]
     # print(new_cords)
     with open('coords.bed', 'w') as file:
@@ -25,7 +36,7 @@ def get_sequence(coords, variant, ref):
             bigtext = os.popen(sed_string).read().split("\n")
             # print(bigtext)
             if bigtext == [""]:
-                pass
+                break
             else:
                 # print(bigtext)
                 size = len(bigtext)
@@ -71,9 +82,18 @@ def get_sequence(coords, variant, ref):
             break
         else:
             return [], [], []
-    sequence_output = [convert_to_protein(x) for x in sequence_database]
-    variant_sequence_output = [convert_to_protein(x) for x in variant_sequence_database]
-    variant_location_output = [x for x in variant_location_list if x]
+    if 'sequence_database' in locals():
+        sequence_output = [convert_to_protein(x) for x in sequence_database]
+    else:
+        sequence_output = []
+    if 'variant_sequence_database' in locals():
+        variant_sequence_output = [convert_to_protein(x) for x in variant_sequence_database]
+    else:
+        variant_sequence_output = []
+    if 'variant_location_list' in locals():
+        variant_location_output = [x for x in variant_location_list if x]
+    else:
+        variant_location_output = []
     return variant_location_output, sequence_output, variant_sequence_output
 
 
@@ -153,8 +173,8 @@ def find_variant_location(geneid, location):
     grepstring = 'grep "{genename}" Databases/hg19.ensGene.gtf'.format(genename=geneid)
     all_lines = os.popen(grepstring).read().split("\n")[1:]
     # print(all_lines)
-    genelengthlist = [None] * 20
-    sequence_loc_list = [None] * 20
+    genelengthlist = [None] * 100
+    sequence_loc_list = [None] * 100
     # print(sequence_loc_list)
     genelength = 0
     geneversioncount = 0
@@ -193,6 +213,10 @@ def find_variant_location(geneid, location):
 
 
 def get_model():
+    """
+    Creates an empty model on which the weigths are then loaded from a saved file.
+    :return: a neural network.
+    """
     model = tf.keras.Sequential([
     tf.keras.layers.InputLayer(input_shape=(3000,)),
     tf.keras.layers.Dense(5000, activation='relu'),
@@ -205,48 +229,56 @@ def get_model():
 # sequences =
 
 
-variant_location_list, sequence_list, variant_sequence_list = get_sequence(['chr1', '874421', '874422'], 'A', 'G')
-normal_sequence_numeric = one_of_each(sequence_list)
-variant_sequence_numeric = one_of_each(variant_sequence_list)
-print(one_of_each(sequence_list))
-print(variant_location_list)
-print(variant_sequence_list)
-
-model = get_model()
-model.load_weights('./models/binding.sav')
-other_binding = model.predict(normal_sequence_numeric).round()
-model = get_model()
-model.load_weights('./models/dna_binding.sav')
-dna_binding = model.predict(normal_sequence_numeric).round()
-model = get_model()
-model.load_weights('./models/metal.sav')
-metal_binding = model.predict(normal_sequence_numeric).round()
-model = get_model()
-model.load_weights('./models/Act_sites.sav')
-active = model.predict(normal_sequence_numeric).round()
-
-model = get_model()
-model.load_weights('./models/binding.sav')
-variant_other_binding = model.predict(variant_sequence_numeric).round()
-model = get_model()
-model.load_weights('./models/dna_binding.sav')
-variant_dna_binding = model.predict(variant_sequence_numeric).round()
-model = get_model()
-model.load_weights('./models/metal.sav')
-variant_metal_binding = model.predict(variant_sequence_numeric).round()
-model = get_model()
-model.load_weights('./models/Act_sites.sav')
-variant_active = model.predict(variant_sequence_numeric).round()
-#for i in range(0, len(variant_location_list)):
-
-# todo store this output data properly
-
-#for variant_location, sequence, variant_sequence in zip(variant_location_list, sequence_list, variant_sequence_list):
-#    print(variant_location)
-#    print(sequence)
-#    print(variant_sequence)
-#    model = get_model()
-iteration = 0
-for sequence in sequence_list:
-    plotprotein(sequence, other_binding[iteration], dna_binding[iteration], metal_binding[iteration], active[iteration], variant_location_list[iteration])
-    iteration += 1
+#variant_location_list, sequence_list, variant_sequence_list = get_sequence(['chr1', '861370', '861371'], 'T', 'C')
+# variant_location_list, sequence_list, variant_sequence_list = get_sequence(['chr1', '100', '100'], 'T', 'C')
+# #variant_location_list, sequence_list, variant_sequence_list = get_sequence(['chr1', '1209126', '1209127'], 'A', 'G')
+# normal_sequence_numeric = one_of_each(sequence_list)
+# variant_sequence_numeric = one_of_each(variant_sequence_list)
+# protein_variant_location_list = [round(int(i)/3) for i in variant_location_list]
+# print(one_of_each(sequence_list))
+# print(variant_location_list)
+# print(variant_sequence_list)
+#
+# model = get_model()
+# model.load_weights('./models/binding.sav')
+# other_binding = model.predict(normal_sequence_numeric)
+# model = get_model()
+# model.load_weights('./models/dna_binding.sav')
+# dna_binding = model.predict(normal_sequence_numeric)
+# model = get_model()
+# model.load_weights('./models/metal.sav')
+# metal_binding = model.predict(normal_sequence_numeric)
+# model = get_model()
+# model.load_weights('./models/Act_sites.sav')
+# active = model.predict(normal_sequence_numeric)
+#
+# model = get_model()
+# model.load_weights('./models/binding.sav')
+# variant_other_binding = model.predict(variant_sequence_numeric).round()
+# model = get_model()
+# model.load_weights('./models/dna_binding.sav')
+# variant_dna_binding = model.predict(variant_sequence_numeric).round()
+# model = get_model()
+# model.load_weights('./models/metal.sav')
+# variant_metal_binding = model.predict(variant_sequence_numeric).round()
+# model = get_model()
+# model.load_weights('./models/Act_sites.sav')
+# variant_active = model.predict(variant_sequence_numeric).round()
+# #for i in range(0, len(variant_location_list)):
+#
+# # todo store this output data properly
+#
+# #for variant_location, sequence, variant_sequence in zip(variant_location_list, sequence_list, variant_sequence_list):
+# #    print(variant_location)
+# #    print(sequence)
+# #    print(variant_sequence)
+# #    model = get_model()
+# iteration = 0
+# for sequence in sequence_list:
+#     plotprotein(sequence, other_binding[iteration], dna_binding[iteration], metal_binding[iteration], active[iteration], protein_variant_location_list[iteration])
+#     iteration += 1
+#
+# iteration = 0
+# for sequence in variant_sequence_list:
+#     plotprotein(sequence, variant_other_binding[iteration], variant_dna_binding[iteration], variant_metal_binding[iteration], variant_active[iteration], protein_variant_location_list[iteration])
+#     iteration += 1

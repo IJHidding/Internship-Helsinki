@@ -99,8 +99,10 @@ python3 predictor.py output_annotation/clinpred.prediction clinpred output_annot
 
 
 # combined output and header and sort
-grep -v "^#" output_annotation/*_pred.txt | cut -d ':' -f 2- > all_ann_variants.txt
-cat header.txt all_ann_variants.txt | sort -k1,1V -k2,2n > output_annotation/predicted_output.vcf
+grep -v "^#" output_annotation/*_pred.txt | cut -d ':' -f 2-  |sort -k1,1V -k2,2n > all_ann_variants.txt
+grep "^##" header.txt > toplines.txt
+grep "#CHROM" header.txt | sed -e 's/$/  NEW_CHR  NC_POS1 NCPOS2  VICTOR_1  VICTOR_2  VICTOR_3  PREDICTIONSCORE/' > headerline.txt
+cat headerline.txt all_ann_variants.txt > output_annotation/predicted_output.vcf
 
 # cleanup
 rm VICTOR_annotation*
